@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "id": "moonvalefreecam",
+  "version": "1.1.3+26.3",
+  "environment": "client",
+  "entrypoints": {
+    "modmenu": [
+      "net.xolt.freecam.fabric.ModMenuIntegration"
+    ],
+    "client": [
+      "net.xolt.freecam.fabric.FreecamFabric"
+    ]
+  },
+  "mixins": [
+    {
+      "config": "freecam-common.mixins.json",
+      "environment": "client"
+    },
+    {
+      "config": "freecam-fabric.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "accessWidener": "freecam.accesswidener",
+  "depends": {
+    "minecraft": ">=26.3.0 <26.4.0-0",
+    "fabricloader": ">=0.18.0",
+    "fabric-api-base": "*",
+    "fabric-key-mapping-api-v1": "*",
+    "fabric-lifecycle-events-v1": "*",
+    "fabric-message-api-v1": "*",
+    "fabric-resource-loader-v1": "*"
+  },
+  "breaks": {
+    "freecam": "*"
+  },
+  "recommends": {
+    "modmenu": "*"
+  },
+  "name": "Freecam (MoonVale)",
+  "description": "Разрешенная версия мода Freecam для сервера MoonVale.",
+  "authors": [
+    "SancheXXXd_",
+    "Omeleox"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "icon.png",
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.server_website": "https://moonvale.ru/",
+        "moonvalefreecam.link.modrinth": "https://modrinth.com/mod/freecam-moonvale",
+        "moonvalefreecam.link.discord": "https://discord.gg/sby6J6kBTh",
+        "moonvalefreecam.link.source": "https://github.com/SancheXXXd/Freecam-MoonVale"
+      }
+    }
+  },
+  "jars": [
+    {
+      "file": "META-INF/jars/cloth-config-fabric-26.3.158.jar"
+    },
+    {
+      "file": "META-INF/jars/fabric-api-base-2.0.6+fcdff87f02.jar"
+    },
+    {
+      "file": "META-INF/jars/fabric-key-mapping-api-v1-2.0.8+3434d6d902.jar"
+    },
+    {
+      "file": "META-INF/jars/fabric-lifecycle-events-v1-4.1.9+ffef5f6702.jar"
+    },
+    {
+      "file": "META-INF/jars/fabric-message-api-v1-7.0.10+3434d6d902.jar"
+    },
+    {
+      "file": "META-INF/jars/fabric-resource-loader-v1-3.0.4+fcdff87f02.jar"
+    },
+    {
+      "file": "META-INF/jars/mixinextras-fabric-0.5.5.jar"
+    }
+  ]
+}

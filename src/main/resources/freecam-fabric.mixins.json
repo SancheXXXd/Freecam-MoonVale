@@ -1,0 +1,14 @@
+{
+    "required": true,
+    "package": "net.xolt.freecam.fabric.mixins",
+    "plugin": "net.xolt.freecam.FreecamMixinConfig",
+    "compatibilityLevel": "JAVA_25",
+    "minVersion": "0.8",
+    "client": [
+        "LevelExtractorMixin",
+        "BoundaryMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}
