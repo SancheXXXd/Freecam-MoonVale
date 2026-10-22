@@ -1,5 +1,3 @@
-![Modrith](https://i.postimg.cc/NG4Wry31/image-(1).png)
-
 # Freecam (MoonVale)
 
 A fork of [Freecam](https://modrinth.com/mod/freecam) for the MoonVale server.
