@@ -13,6 +13,7 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoveSimulationType;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.LivingEntity.SwingDescription;
@@ -38,6 +39,7 @@ public class FreeCamera extends AbstractClientPlayer {
    private static final double BOUNDARY_EPSILON = 1.0E-4;
    private final Vector3f boundaryContactNormal = new Vector3f(1.0F, 0.0F, 0.0F);
    private float boundaryGlow;
+   private Vec3 lastSafeEye;
    public ClientInput input;
    public float yBob;
    public float xBob;
@@ -53,11 +55,16 @@ public class FreeCamera extends AbstractClientPlayer {
    }
 
    public void tick() {
+      if (!this.ensureSafePosition()) {
+         return;
+      }
+      this.noPhysics = false;
       this.input.tick();
       this.doMotion();
       this.applyBoundaryResistance();
       super.tick();
       this.enforcePlayerBoundary();
+      this.ensureSafePosition();
       this.updateBoundaryGlow();
    }
 
@@ -67,11 +74,52 @@ public class FreeCamera extends AbstractClientPlayer {
    }
 
    public void applyPosition(FreecamPosition position) {
-      this.snapTo(position.x, position.y, position.z, position.yaw, position.pitch);
+      Vec3 desiredEye = new Vec3(position.x, position.y + this.getEyeHeight(), position.z);
+      if (CameraCollision.isClear(this.getClientLevel(), desiredEye, CameraCollision.EYE_RADIUS)) {
+         this.lastSafeEye = desiredEye;
+         this.snapTo(position.x, position.y, position.z, position.yaw, position.pitch);
+      } else if (this.lastSafeEye != null && CameraCollision.isClear(this.getClientLevel(), this.lastSafeEye, CameraCollision.EYE_RADIUS)) {
+         this.snapTo(this.lastSafeEye.x, this.lastSafeEye.y - this.getEyeHeight(), this.lastSafeEye.z, position.yaw, position.pitch);
+      } else {
+         this.snapTo(position.x, position.y, position.z, position.yaw, position.pitch);
+         Freecam.disableNextTick();
+      }
+      this.setDeltaMovement(Vec3.ZERO);
       this.xBob = this.getXRot();
       this.yBob = this.getYRot();
       this.xBobO = this.xBob;
       this.yBobO = this.yBob;
+   }
+
+   @Override
+   public void move(MoverType type, Vec3 movement) {
+      if (!this.ensureSafePosition()) {
+         return;
+      }
+      Vec3 start = this.getEyePosition();
+      this.noPhysics = false;
+      super.move(type, movement);
+      Vec3 target = this.getEyePosition();
+      Vec3 safe = CameraCollision.clip(this.getClientLevel(), start, target, CameraCollision.EYE_RADIUS);
+      if (safe.distanceToSqr(target) > 1.0E-16) {
+         this.setPos(safe.x, safe.y - this.getEyeHeight(), safe.z);
+         this.setDeltaMovement(Vec3.ZERO);
+      }
+      this.ensureSafePosition();
+   }
+
+   private boolean ensureSafePosition() {
+      Vec3 eye = this.getEyePosition();
+      if (CameraCollision.isClear(this.getClientLevel(), eye, CameraCollision.EYE_RADIUS)) {
+         this.lastSafeEye = eye;
+         return true;
+      }
+      if (this.lastSafeEye != null && CameraCollision.isClear(this.getClientLevel(), this.lastSafeEye, CameraCollision.EYE_RADIUS)) {
+         this.snapTo(this.lastSafeEye.x, this.lastSafeEye.y - this.getEyeHeight(), this.lastSafeEye.z, this.getYRot(), this.getXRot());
+      }
+      this.setDeltaMovement(Vec3.ZERO);
+      Freecam.disableNextTick();
+      return false;
    }
 
    public void applyPerspective(Perspective perspective, boolean checkCollision) {
@@ -91,31 +139,15 @@ public class FreeCamera extends AbstractClientPlayer {
    }
 
    private boolean moveForwardUntilCollision(FreecamPosition position, double distance, boolean checkCollision) {
-      if (!checkCollision) {
-         position.moveForward(distance);
-         this.applyPosition(position);
-         return true;
-      } else {
-         return this.moveForwardUntilCollision(position, distance);
-      }
-   }
-
-   private boolean moveForwardUntilCollision(FreecamPosition position, double maxDistance) {
-      boolean negative = maxDistance < 0.0;
-      maxDistance = negative ? -1.0 * maxDistance : maxDistance;
-      double increment = 0.1;
-
-      for (double distance = 0.0; distance < maxDistance; distance += increment) {
-         FreecamPosition oldPosition = new FreecamPosition(this);
-         position.moveForward(negative ? -1.0 * increment : increment);
-         this.applyPosition(position);
-         if (!this.wouldNotSuffocateAtTargetPose(this.getPose())) {
-            this.applyPosition(oldPosition);
-            return distance > 0.0;
-         }
-      }
-
-      return true;
+      Vec3 start = this.getEyePosition();
+      position.moveForward(distance);
+      Vec3 target = new Vec3(position.x, position.y + this.getEyeHeight(), position.z);
+      Vec3 safe = CameraCollision.clip(this.getClientLevel(), start, target, CameraCollision.EYE_RADIUS);
+      position.x = safe.x;
+      position.y = safe.y - this.getEyeHeight();
+      position.z = safe.z;
+      this.applyPosition(position);
+      return safe.distanceToSqr(start) > 1.0E-16;
    }
 
    private ClientLevel getClientLevel() {
@@ -218,7 +250,14 @@ public class FreeCamera extends AbstractClientPlayer {
          boolean hitZ = clampedZ != z;
          if (hitX || hitY || hitZ) {
             Vec3 velocity = this.getDeltaMovement();
-            this.snapTo(clampedX, clampedY, clampedZ, this.getYRot(), this.getXRot());
+            Vec3 safe = CameraCollision.clip(this.getClientLevel(), this.getEyePosition(),
+               new Vec3(clampedX, clampedY + this.getEyeHeight(), clampedZ), CameraCollision.EYE_RADIUS);
+            this.setPos(safe.x, safe.y - this.getEyeHeight(), safe.z);
+            if (Math.abs(this.getX() - clampedX) > BOUNDARY_EPSILON
+               || Math.abs(this.getY() - clampedY) > BOUNDARY_EPSILON
+               || Math.abs(this.getZ() - clampedZ) > BOUNDARY_EPSILON) {
+               Freecam.disableNextTick();
+            }
             this.setDeltaMovement(hitX ? 0.0 : velocity.x, hitY ? 0.0 : velocity.y, hitZ ? 0.0 : velocity.z);
             this.updateContactNormal(clampedX - Freecam.MC.player.getX(), clampedY - Freecam.MC.player.getEyeY(), clampedZ - Freecam.MC.player.getZ());
          }

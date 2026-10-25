@@ -1,19 +1,21 @@
 package net.xolt.freecam.mixins;
 
-import net.xolt.freecam.Freecam;
-import net.xolt.freecam.util.MoonValeAudio;
+import net.minecraft.world.entity.Entity;
+import net.xolt.freecam.util.MoonValeVoice;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Pseudo
-@Mixin(targets = "su.plo.voice.client.audio.device.source.BaseAlSource", remap = false)
+@Mixin(targets = "su.plo.voice.client.audio.source.BaseClientAudioSource", remap = false)
 public class PlasmoVoiceSourceMixin {
-   private static final int AL_GAIN = 4106;
-
-   @Redirect(method = "setFloat", at = @At(value = "INVOKE", target = "Lorg/lwjgl/openal/AL11;alSourcef(IIF)V", remap = false), remap = false, require = 0)
-   private void freecam$muteVoiceSource(int var1, int var2, float var3) {
-      MoonValeAudio.setSourceFloat(var1, var2, var3, Freecam.isEnabled());
+   @Inject(method = "getListener()Lnet/minecraft/world/entity/Entity;", at = @At("HEAD"), cancellable = true, remap = false, require = 1)
+   private void freecam$usePlayerForVoiceDistance(CallbackInfoReturnable<Entity> cir) {
+      Entity listener = MoonValeVoice.playerListener();
+      if (listener != null) {
+         cir.setReturnValue(listener);
+      }
    }
 }

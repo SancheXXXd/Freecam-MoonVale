@@ -25,7 +25,8 @@
         "MultiPlayerGameModeMixin",
         "OptionsMixin",
         "PlasmoVoiceListenerMixin",
-        "PlasmoVoiceSourceMixin"
+        "PlasmoVoiceSourceMixin",
+        "PlasmoVoiceSpatialMixin"
     ],
     "injectors": {
         "defaultRequire": 1

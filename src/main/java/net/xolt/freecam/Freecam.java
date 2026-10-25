@@ -26,8 +26,8 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 public class Freecam {
    public static final Minecraft MC = Minecraft.getInstance();
    public static final String MOD_ID = "freecam";
-   private static boolean freecamEnabled = false;
-   private static boolean tripodEnabled = false;
+   private static volatile boolean freecamEnabled = false;
+   private static volatile boolean tripodEnabled = false;
    private static boolean playerControlEnabled = false;
    private static boolean disableNextTick = false;
    private static boolean outlineEnabled = false;
@@ -220,7 +220,7 @@ public class Freecam {
    }
 
    private static void onEnable() {
-      MC.smartCull = false;
+      MC.smartCull = true;
       outlineEnabled = ModConfig.get().shouldOutlinePlayer();
       if (!isEnabled()) {
          rememberedF5 = MC.options.getCameraType();

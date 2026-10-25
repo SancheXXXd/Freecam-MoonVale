@@ -9,7 +9,10 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 public class FreecamMixinConfig implements IMixinConfigPlugin {
    private static final Map<String, String> MOD_MIXINS = Map.of(
-      "net.xolt.freecam.mixins.IrisHandRendererMixin", "iris", "net.xolt.freecam.mixins.IrisShadowRendererMixin", "iris"
+      "net.xolt.freecam.mixins.IrisHandRendererMixin", "iris", "net.xolt.freecam.mixins.IrisShadowRendererMixin", "iris",
+      "net.xolt.freecam.mixins.PlasmoVoiceListenerMixin", "plasmovoice",
+      "net.xolt.freecam.mixins.PlasmoVoiceSourceMixin", "plasmovoice",
+      "net.xolt.freecam.mixins.PlasmoVoiceSpatialMixin", "plasmovoice"
    );
 
    public void onLoad(String mixinPackage) {
