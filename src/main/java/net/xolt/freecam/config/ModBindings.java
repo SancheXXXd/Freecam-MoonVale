@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 public enum ModBindings {
    KEY_TOGGLE(() -> FreecamKeyMappingBuilder.builder("toggle").action(Freecam::toggle).holdAction(Freecam::activateTripodHandler).defaultKey(61).build()),
+   KEY_CONTROL_PLAYER(() -> FreecamKeyMappingBuilder.builder("controlPlayer.toggle").action(Freecam::switchControls).build()),
    KEY_TRIPOD_RESET(() -> FreecamKeyMappingBuilder.builder("tripod.reset").holdAction(Freecam::resetTripodHandler).build()),
    KEY_CONFIG_GUI(() -> FreecamKeyMappingBuilder.builder("config.open").action(ConfigScreenProvider.provider()::openConfigScreen).build());
 
